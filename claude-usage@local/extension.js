@@ -44,9 +44,10 @@ export default class ClaudeUsageExtension extends Extension {
     }
 
     _meter(trackClass) {
-        const track = new St.Bin({style_class: trackClass, y_align: CENTER});
-        const fill = new St.Widget({style_class: 'cu-fill cu-low', x_align: Clutter.ActorAlign.START, width: 0});
-        track.set_child(fill);
+        // A box packs from the left edge; St.Bin centered the fill on GNOME 46.
+        const track = new St.BoxLayout({style_class: trackClass, y_align: CENTER});
+        const fill = new St.Widget({style_class: 'cu-fill cu-low', width: 0});
+        track.add_child(fill);
         return {track, fill};
     }
 
