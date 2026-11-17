@@ -25,7 +25,8 @@
     <text x="420" y="22" fill="#fff" font-size="13" font-weight="bold" text-anchor="middle">Tue 17 Nov  11:32</text>
 
     <!-- indicator (highlighted because the menu is open) -->
-    <rect x="590" y="3" width="118" height="28" rx="14" fill="#fff" opacity="0.16"/>
+    <rect x="550" y="3" width="158" height="28" rx="14" fill="#fff" opacity="0.16"/>
+    <text x="562" y="21" fill="#fff" font-size="11">alex</text>
     <text x="602" y="23" fill="#e8956f" font-size="15">✦</text>
     <rect x="622" y="11" width="48" height="3" rx="1.5" fill="#fff" opacity="0.18"/>
     <rect x="622" y="11" width="18" height="3" rx="1.5" fill="#57e389">

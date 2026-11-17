@@ -1,10 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="840" height="110" viewBox="0 0 840 110" font-family="Cantarell, Ubuntu, 'Segoe UI', Helvetica, Arial, sans-serif">
-  <title>Bar colors: green under 50 percent, amber from 50 percent, red from 80 percent; shown with the Claude (✦) and ChatGPT/Codex (◎) icons</title>
+  <title>Bar colors: green under 50 percent, amber from 50 percent, red from 80 percent; shown with account names and the Claude (✦) and ChatGPT/Codex (◎) icons</title>
   <rect width="840" height="110" rx="16" fill="#1b1b1b"/>
 
   <!-- low -->
-  <g transform="translate(40 18)">
-    <rect width="230" height="40" rx="20" fill="#111" stroke="#333"/>
+  <g transform="translate(30 18)">
+    <rect width="250" height="40" rx="20" fill="#111" stroke="#333"/>
+    <text x="16" y="24" fill="#fff" font-size="10">alex</text>
+    <g transform="translate(26 0)">
     <text x="22" y="26" fill="#e8956f" font-size="16">✦</text>
     <rect x="48" y="13" width="120" height="4" rx="2" fill="#fff" opacity="0.18"/>
     <rect x="48" y="13" width="28" height="4" rx="2" fill="#57e389"><animate attributeName="width" from="0" to="28" dur="1.2s" fill="freeze"/></rect>
@@ -12,12 +14,15 @@
     <rect x="48" y="25" width="120" height="4" rx="2" fill="#fff" opacity="0.18"/>
     <rect x="48" y="25" width="12" height="4" rx="2" fill="#57e389"><animate attributeName="width" from="0" to="12" dur="1.2s" fill="freeze"/></rect>
     <text x="178" y="30" fill="#fff" font-size="10">10%</text>
-    <text x="115" y="72" fill="#57e389" font-size="14" font-weight="bold" text-anchor="middle">Under 50% · relaxed</text>
+    </g>
+    <text x="125" y="72" fill="#57e389" font-size="14" font-weight="bold" text-anchor="middle">Under 50% · relaxed</text>
   </g>
 
   <!-- mid -->
-  <g transform="translate(305 18)">
-    <rect width="230" height="40" rx="20" fill="#111" stroke="#333"/>
+  <g transform="translate(295 18)">
+    <rect width="250" height="40" rx="20" fill="#111" stroke="#333"/>
+    <text x="16" y="24" fill="#fff" font-size="10">alex</text>
+    <g transform="translate(26 0)">
     <text x="21" y="26" fill="#fff" font-size="16">◎</text>
     <rect x="48" y="13" width="120" height="4" rx="2" fill="#fff" opacity="0.18"/>
     <rect x="48" y="13" width="77" height="4" rx="2" fill="#f8c251"><animate attributeName="width" from="0" to="77" dur="1.2s" fill="freeze"/></rect>
@@ -25,12 +30,15 @@
     <rect x="48" y="25" width="120" height="4" rx="2" fill="#fff" opacity="0.18"/>
     <rect x="48" y="25" width="41" height="4" rx="2" fill="#57e389"><animate attributeName="width" from="0" to="41" dur="1.2s" fill="freeze"/></rect>
     <text x="178" y="30" fill="#fff" font-size="10">34%</text>
-    <text x="115" y="72" fill="#f8c251" font-size="14" font-weight="bold" text-anchor="middle">50–79% · pace yourself</text>
+    </g>
+    <text x="125" y="72" fill="#f8c251" font-size="14" font-weight="bold" text-anchor="middle">50–79% · pace yourself</text>
   </g>
 
   <!-- high -->
-  <g transform="translate(570 18)">
-    <rect width="230" height="40" rx="20" fill="#111" stroke="#333"/>
+  <g transform="translate(560 18)">
+    <rect width="250" height="40" rx="20" fill="#111" stroke="#333"/>
+    <text x="16" y="24" fill="#fff" font-size="10">sam</text>
+    <g transform="translate(26 0)">
     <text x="22" y="26" fill="#e8956f" font-size="16">✦</text>
     <rect x="48" y="13" width="120" height="4" rx="2" fill="#fff" opacity="0.18"/>
     <rect x="48" y="13" width="109" height="4" rx="2" fill="#ff6b6b"><animate attributeName="width" from="0" to="109" dur="1.2s" fill="freeze"/></rect>
@@ -38,6 +46,7 @@
     <rect x="48" y="25" width="120" height="4" rx="2" fill="#fff" opacity="0.18"/>
     <rect x="48" y="25" width="70" height="4" rx="2" fill="#f8c251"><animate attributeName="width" from="0" to="70" dur="1.2s" fill="freeze"/></rect>
     <text x="178" y="30" fill="#fff" font-size="10">58%</text>
-    <text x="115" y="72" fill="#ff6b6b" font-size="14" font-weight="bold" text-anchor="middle">80%+ · almost out</text>
+    </g>
+    <text x="125" y="72" fill="#ff6b6b" font-size="14" font-weight="bold" text-anchor="middle">80%+ · almost out</text>
   </g>
 </svg>

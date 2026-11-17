@@ -1,6 +1,7 @@
 /* Top bar: icon + two stacked mini bars */
 .cu-panel { spacing: 6px; }
 .cu-icon { font-size: 16pt; }
+.cu-account { font-size: 9pt; }
 .cu-icon-claude { color: #e8956f; }
 .cu-icon-codex  { color: #ffffff; padding-bottom: 4px; } /* lifts ◎ ~2px: it sits low in its fallback font; a negative margin hid it */
 .cu-rows { spacing: 1px; }

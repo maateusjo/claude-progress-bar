@@ -6,7 +6,7 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import {PROVIDERS, fetchUsage, pct, level, until} from './usage.js';
+import {PROVIDERS, fetchUsage, accountName, pct, level, until} from './usage.js';
 
 const REFRESH_SECONDS = 120;
 // Keep in sync with .cu-track / .cu-track-big widths in stylesheet.css.
@@ -19,7 +19,7 @@ const CHOICE_FILE = GLib.build_filenamev([GLib.get_user_config_dir(), 'claude-us
 export default class ClaudeUsageExtension extends Extension {
     enable() {
         this._session = new Soup.Session({timeout: 15});
-        this._usage = this._error = this._updated = null;
+        this._usage = this._error = this._updated = this._account = null;
         try {
             this._provider = new TextDecoder().decode(GLib.file_get_contents(CHOICE_FILE)[1]).trim();
         } catch {}
@@ -28,6 +28,8 @@ export default class ClaudeUsageExtension extends Extension {
         this._button = new PanelMenu.Button(0.0, 'Claude usage', false);
 
         const panel = new St.BoxLayout({style_class: 'cu-panel', y_align: CENTER});
+        this._accountLabel = new St.Label({style_class: 'cu-account', y_align: CENTER, visible: false});
+        panel.add_child(this._accountLabel);
         this._icon = new St.Label({style_class: 'cu-icon', y_align: CENTER});
         panel.add_child(this._icon);
         const rows = new St.BoxLayout({vertical: true, style_class: 'cu-rows', y_align: CENTER});
@@ -103,6 +105,8 @@ export default class ClaudeUsageExtension extends Extension {
 
     _render() {
         const p = PROVIDERS[this._provider];
+        this._accountLabel.text = this._account ?? '';
+        this._accountLabel.visible = !!this._account;
         this._icon.text = p.icon;
         this._icon.style_class = `cu-icon cu-icon-${this._provider}`;
         for (const [id, item] of this._providerItems)
@@ -136,7 +140,7 @@ export default class ClaudeUsageExtension extends Extension {
         } catch (e) {
             console.warn(`Claude Usage: could not save provider choice: ${e.message}`);
         }
-        this._usage = this._error = this._updated = null;
+        this._usage = this._error = this._updated = this._account = null;
         this._render();
         this._refresh();
     }
@@ -151,6 +155,7 @@ export default class ClaudeUsageExtension extends Extension {
         }
         if (provider !== this._provider) // switched while the request was in flight
             return;
+        this._account = accountName(provider); // re-read each time so a CLI re-login shows up
         if (error) {
             this._error = error;
         } else {
@@ -166,6 +171,6 @@ export default class ClaudeUsageExtension extends Extension {
         GLib.source_remove(this._timer);
         this._session.abort();
         this._button.destroy();
-        this._button = this._rows = this._sections = this._refreshItem = this._providerItems = this._icon = this._session = this._usage = null;
+        this._button = this._rows = this._sections = this._refreshItem = this._providerItems = this._icon = this._accountLabel = this._session = this._usage = null;
     }
 }

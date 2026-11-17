@@ -3,7 +3,7 @@ import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import System from 'system';
 import Soup from 'gi://Soup?version=3.0';
-import {PROVIDERS, pct, level, until, codexLimits, fetchUsage} from './claude-usage@local/usage.js';
+import {PROVIDERS, pct, level, until, codexLimits, fetchUsage, jwtEmail} from './claude-usage@local/usage.js';
 
 const assert = (c, m) => { if (!c) throw new Error(m); };
 assert(pct({utilization: 37.6}) === 38, 'pct rounds');
@@ -20,6 +20,9 @@ const [s, w] = codexLimits({rate_limit: {primary_window: {used_percent: 42, rese
 assert(pct(s) === 42 && until(s.resets_at, now) === 'in 1h 0m', 'codex primary window');
 assert(w == null && pct(w) === 0, 'codex missing window');
 assert(codexLimits({}).every(l => l == null), 'codex missing rate_limit');
+// Payload {"email":"a_b@x.io"} base64url-encoded without padding; the "_" exercises the url-safe alphabet.
+const payload = GLib.base64_encode(new TextEncoder().encode('{"email":"a_b@x.io?"}')).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+assert(jwtEmail(`h.${payload}.s`) === 'a_b@x.io?', 'jwt email decode');
 
 // One live fetch per provider whose CLI is logged in on this machine.
 const loop = new GLib.MainLoop(null, false);

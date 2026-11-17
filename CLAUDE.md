@@ -26,7 +26,7 @@ There is no test runner or single-test selection: `test.js` is a flat list of `a
 
 ## Architecture
 
-- `claude-usage@local/usage.js` — the only file importable outside GNOME Shell (no `resource:///org/gnome/shell/...` imports). Holds the `PROVIDERS` table (`claude`: token from `~/.claude/.credentials.json` → `api.anthropic.com/api/oauth/usage`; `codex`: token + account id from `$CODEX_HOME/auth.json` → `chatgpt.com/backend-api/wham/usage`, both undocumented), `fetchUsage(session, provider)` which returns `[session5h, weekly]` as `{utilization, resets_at}`, and pure helpers `pct`, `level`, `until`, `codexLimits`. A new provider is one entry in `PROVIDERS` whose `limits()` normalizes to that shape. Put new logic here as pure functions so `test.js` can cover it.
+- `claude-usage@local/usage.js` — the only file importable outside GNOME Shell (no `resource:///org/gnome/shell/...` imports). Holds the `PROVIDERS` table (`claude`: token from `~/.claude/.credentials.json` → `api.anthropic.com/api/oauth/usage`; `codex`: token + account id from `$CODEX_HOME/auth.json` → `chatgpt.com/backend-api/wham/usage`, both undocumented), `fetchUsage(session, provider)` which returns `[session5h, weekly]` as `{utilization, resets_at}`, and pure helpers `pct`, `level`, `until`, `codexLimits`, `jwtEmail`. `accountName(provider)` shows the username part of the account email left of the logo (Claude: `oauthAccount.emailAddress` in `~/.claude.json`; Codex: `email` claim of `tokens.id_token`). A new provider is one entry in `PROVIDERS` whose `limits()` normalizes to that shape. Put new logic here as pure functions so `test.js` can cover it.
 - `claude-usage@local/extension.js` — UI only: `PanelMenu.Button` with two panel rows, two menu sections, provider radio items (choice saved in `~/.config/claude-usage-provider`), a refresh item, and a `REFRESH_SECONDS` timer. `_refresh()` fetches into state; `_render()` paints from state (also re-run on menu open so countdowns stay current). `disable()` must tear down everything `enable()` creates (timer, Soup session, button).
 - Claude response: `five_hour` / `seven_day` with `utilization` (0–100) and `resets_at` (ISO). Codex response: `rate_limit.primary_window` / `secondary_window` with `used_percent` and `reset_at` (Unix seconds).
 - `_refresh()` drops results if the provider was switched while the request was in flight.
@@ -39,6 +39,6 @@ There is no test runner or single-test selection: `test.js` is a flat list of `a
 ## Rules
 
 - Keep it dependency-free: GJS and GNOME platform libraries only.
-- The extension must stay read-only with respect to `~/.claude/` and `~/.codex/` — never write, refresh or copy credentials files (the CLIs own token refresh; an expired token surfaces as `HTTP 401` in the menu).
+- The extension must stay read-only with respect to `~/.claude/`, `~/.claude.json` and `~/.codex/` — never write, refresh or copy credentials files (the CLIs own token refresh; an expired token surfaces as `HTTP 401` in the menu).
 - Never commit tokens or real API responses.
 - Supported shell versions are declared in `metadata.json`.

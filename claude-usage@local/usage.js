@@ -7,6 +7,7 @@ Gio._promisify(Soup.Session.prototype, 'send_and_read_async');
 // shortcut: undocumented endpoints (Claude Code's /usage, Codex's /status); may change without notice.
 const home = GLib.get_home_dir();
 const codexHome = GLib.getenv('CODEX_HOME') ?? GLib.build_filenamev([home, '.codex']);
+const readJson = path => JSON.parse(new TextDecoder().decode(GLib.file_get_contents(path)[1]));
 
 // Read-only: we never refresh tokens (the CLIs own those files); an expired token just shows an error until the CLI runs again.
 export const PROVIDERS = {
@@ -21,6 +22,7 @@ export const PROVIDERS = {
             return {'Authorization': `Bearer ${token}`, 'anthropic-beta': 'oauth-2025-04-20'};
         },
         limits: u => [u.five_hour, u.seven_day],
+        email: () => readJson(GLib.build_filenamev([home, '.claude.json'])).oauthAccount?.emailAddress,
     },
     codex: {
         name: 'ChatGPT', icon: '◎', cli: 'Codex',
@@ -36,6 +38,9 @@ export const PROVIDERS = {
             return h;
         },
         limits: codexLimits,
+        email() {
+            return jwtEmail(readJson(this.creds).tokens?.id_token);
+        },
     },
 };
 
@@ -45,11 +50,25 @@ export function codexLimits(u) {
     return [win(u.rate_limit?.primary_window), win(u.rate_limit?.secondary_window)];
 }
 
+// Decodes the email claim of a JWT payload without verifying it (display only).
+export function jwtEmail(jwt) {
+    const b64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(new TextDecoder().decode(GLib.base64_decode(b64.padEnd(Math.ceil(b64.length / 4) * 4, '=')))).email;
+}
+
+// Username part of the logged-in account's email, or null if unknown.
+export function accountName(provider) {
+    try {
+        return PROVIDERS[provider].email()?.split('@')[0] || null;
+    } catch {
+        return null;
+    }
+}
+
 // Returns [session (5h), weekly] limits as {utilization, resets_at}.
 export async function fetchUsage(session, provider, timeoutSeconds = 20) {
     const p = PROVIDERS[provider];
-    const [, bytes] = GLib.file_get_contents(p.creds);
-    const headers = p.headers(JSON.parse(new TextDecoder().decode(bytes)));
+    const headers = p.headers(readJson(p.creds));
     const msg = Soup.Message.new('GET', p.url);
     for (const [k, v] of Object.entries(headers))
         msg.request_headers.append(k, v);

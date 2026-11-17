@@ -25,6 +25,7 @@ Ever been cut off mid-task by *"You've reached your usage limit"*? This small GN
 | | |
 |---|---|
 | 🔀 **Claude or ChatGPT** | Pick Claude Code or Codex (ChatGPT plan) from the drop-down. Your choice is remembered. |
+| 👤 **Account name** | The username of the logged-in account sits left of the logo, so you know whose limits you're seeing. |
 | 📊 **Two stacked mini bars** | Session (5h) on top, weekly below. Compact enough to sit beside the tray icons. |
 | 🎨 **Color-coded** | Green → amber → red as you approach the limit. |
 | 🎞️ **Smooth animation** | Bars glide to their new value and colors cross-fade. |
@@ -33,7 +34,7 @@ Ever been cut off mid-task by *"You've reached your usage limit"*? This small GN
 | 🪶 **Zero dependencies** | ~250 lines of plain GJS. Nothing to install besides the extension itself. |
 
 <div align="center">
-<img src="docs/states.svg" alt="Bar colors: green under 50%, amber from 50 to 79%, red from 80%, shown with the Claude (✦) and ChatGPT/Codex (◎) icons" width="840">
+<img src="docs/states.svg" alt="Bar colors: green under 50%, amber from 50 to 79%, red from 80%, shown with account names and the Claude (✦) and ChatGPT/Codex (◎) icons" width="840">
 </div>
 
 ## 🔍 How it works
@@ -55,6 +56,7 @@ With **ChatGPT** selected it does the same with the token [Codex](https://github
 - **You don't enter any credentials.** The extension reuses the login Claude Code or Codex already saved.
 - **Your token only goes to its own provider** (`api.anthropic.com` or `chatgpt.com`), the same server the CLI talks to. Only the selected provider is contacted. No analytics or third-party services.
 - **Read-only.** The extension never writes to, refreshes, or copies your credentials files, so it can't break your CLI login.
+- **Account name stays local.** It's read from Claude Code's `~/.claude.json` or the Codex login's ID token, and only shown in your top bar.
 - **Nothing is logged.** The only thing stored is your provider choice, in `~/.config/claude-usage-provider`.
 - **Small and auditable.** All the logic lives in [`usage.js`](claude-usage@local/usage.js) and [`extension.js`](claude-usage@local/extension.js).
 
