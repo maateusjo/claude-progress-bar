@@ -1,6 +1,6 @@
 <div align="center">
 
-# ✦ Claude Usage for GNOME
+# ✦ AI Usage Meter for Claude & Codex
 
 **Your Claude Code or ChatGPT/Codex subscription limits, live in the Ubuntu top bar.**
 
@@ -9,7 +9,7 @@
 ![No dependencies](https://img.shields.io/badge/dependencies-none-57e389)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
-<img src="docs/hero.svg" alt="The Claude Usage indicator in the GNOME top bar, with the drop-down showing session and weekly usage bars, reset countdowns and the Claude / ChatGPT (Codex) provider picker" width="840">
+<img src="docs/hero.svg" alt="The AI Usage Meter for Claude &amp; Codex indicator in the GNOME top bar, with the drop-down showing session and weekly usage bars, reset countdowns and the Claude / ChatGPT (Codex) provider picker" width="840">
 
 </div>
 
@@ -58,7 +58,7 @@ With **ChatGPT** selected it does the same with the token [Codex](https://github
 - **Read-only.** The extension never writes to, refreshes, or copies your credentials files, so it can't break your CLI login.
 - **Account name stays local.** It's read from Claude Code's `~/.claude.json` or the Codex login's ID token, and only shown in your top bar.
 - **Nothing is logged.** The only thing stored is your provider choice, in `~/.config/claude-usage-provider`.
-- **Small and auditable.** All the logic lives in [`usage.js`](claude-usage@local/usage.js) and [`extension.js`](claude-usage@local/extension.js).
+- **Small and auditable.** All the logic lives in [`usage.js`](claude-usage@maateusjo.github.io/usage.js) and [`extension.js`](claude-usage@maateusjo.github.io/extension.js).
 
 > [!WARNING]
 > The usage endpoints are **undocumented** and may change without notice. If that happens the indicator shows ⚠ until the extension is updated. It can't affect your account.
@@ -70,7 +70,7 @@ With **ChatGPT** selected it does the same with the token [Codex](https://github
 
 ## 🚀 Installation
 
-**Quickest:** download `claude-usage@local.zip` from the [latest release](https://github.com/maateusjo/claude-progress-bar/releases/latest), run `gnome-extensions install --force claude-usage@local.zip`, then continue at step 3.
+**Quickest:** download `claude-usage@maateusjo.github.io.zip` from the [latest release](https://github.com/maateusjo/claude-progress-bar/releases/latest), run `gnome-extensions install --force claude-usage@maateusjo.github.io.zip`, then continue at step 3.
 
 **From source:**
 
@@ -81,7 +81,7 @@ cd claude-progress-bar
 
 # 2. Install it for your user
 mkdir -p ~/.local/share/gnome-shell/extensions
-cp -r claude-usage@local ~/.local/share/gnome-shell/extensions/
+cp -r claude-usage@maateusjo.github.io ~/.local/share/gnome-shell/extensions/
 ```
 
 **3. Restart GNOME Shell** so it detects the new extension:
@@ -91,7 +91,7 @@ cp -r claude-usage@local ~/.local/share/gnome-shell/extensions/
 
 ```bash
 # 4. Enable it
-gnome-extensions enable claude-usage@local
+gnome-extensions enable claude-usage@maateusjo.github.io
 ```
 
 The ✦ indicator appears in the top bar. Click it for details. 🎉
@@ -101,7 +101,7 @@ The ✦ indicator appears in the top bar. Click it for details. 🎉
 
 ```bash
 cd claude-progress-bar && git pull
-cp -r claude-usage@local ~/.local/share/gnome-shell/extensions/
+cp -r claude-usage@maateusjo.github.io ~/.local/share/gnome-shell/extensions/
 ```
 Then log out and back in (Wayland) or restart the shell (X11).
 </details>
@@ -110,8 +110,8 @@ Then log out and back in (Wayland) or restart the shell (X11).
 <summary><b>Uninstalling</b></summary>
 
 ```bash
-gnome-extensions disable claude-usage@local
-rm -rf ~/.local/share/gnome-shell/extensions/claude-usage@local
+gnome-extensions disable claude-usage@maateusjo.github.io
+rm -rf ~/.local/share/gnome-shell/extensions/claude-usage@maateusjo.github.io
 ```
 </details>
 
@@ -124,12 +124,12 @@ rm -rf ~/.local/share/gnome-shell/extensions/claude-usage@local
 | **⚠ "Not logged in to Codex with ChatGPT"** | Run `codex login` and sign in with ChatGPT, not an API key. |
 | **⚠ "Not logged in to Claude Code with a subscription"** | You're logged in with an API key, or not at all. Run `claude`, then `/login` with your Pro/Max account. |
 | **⚠ with a file error** | The selected CLI isn't logged in on this machine (`~/.claude/.credentials.json` or `~/.codex/auth.json` is missing). |
-| **Indicator doesn't appear** | Check `gnome-extensions info claude-usage@local`. It should say `State: ACTIVE`. |
+| **Indicator doesn't appear** | Check `gnome-extensions info claude-usage@maateusjo.github.io`. It should say `State: ACTIVE`. |
 | **Something else** | Watch the shell log: `journalctl -f -o cat /usr/bin/gnome-shell` |
 
 ## 🎨 Customizing
 
-All sizes and colors live in [`stylesheet.css`](claude-usage@local/stylesheet.css):
+All sizes and colors live in [`stylesheet.css`](claude-usage@maateusjo.github.io/stylesheet.css):
 
 ```css
 .cu-low  { background-color: #57e389; }   /* under 50% */
@@ -152,7 +152,7 @@ Symlink the extension instead of copying it, so your edits are picked up on the 
 ```bash
 git clone https://github.com/maateusjo/claude-progress-bar.git
 cd claude-progress-bar
-ln -sfn "$PWD/claude-usage@local" ~/.local/share/gnome-shell/extensions/claude-usage@local
+ln -sfn "$PWD/claude-usage@maateusjo.github.io" ~/.local/share/gnome-shell/extensions/claude-usage@maateusjo.github.io
 ```
 
 ### Testing
@@ -169,7 +169,7 @@ dbus-run-session -- gnome-shell --devkit             # GNOME 48+
 ### Project layout
 
 ```
-claude-usage@local/
+claude-usage@maateusjo.github.io/
 ├── metadata.json    # extension id and supported GNOME versions
 ├── extension.js     # top-bar widget, drop-down menu, refresh timer
 ├── usage.js         # API call + pure helpers (pct, level, until), testable outside the shell

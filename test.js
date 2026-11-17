@@ -3,7 +3,7 @@ import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import System from 'system';
 import Soup from 'gi://Soup?version=3.0';
-import {PROVIDERS, pct, level, until, codexLimits, fetchUsage, jwtEmail} from './claude-usage@local/usage.js';
+import {PROVIDERS, pct, level, until, codexLimits, fetchUsage, jwtEmail} from './claude-usage@maateusjo.github.io/usage.js';
 
 const assert = (c, m) => { if (!c) throw new Error(m); };
 assert(pct({utilization: 37.6}) === 38, 'pct rounds');

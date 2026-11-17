@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="840" height="370" viewBox="0 0 840 370" font-family="Cantarell, Ubuntu, 'Segoe UI', Helvetica, Arial, sans-serif">
-  <title>Claude Usage indicator in the GNOME top bar with its drop-down menu open, showing the Claude / ChatGPT (Codex) provider picker</title>
+  <title>AI Usage Meter for Claude &amp; Codex indicator in the GNOME top bar with its drop-down menu open, showing the Claude / ChatGPT (Codex) provider picker</title>
   <defs>
     <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#3a1240"/>

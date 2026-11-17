@@ -3,11 +3,18 @@ import GLib from 'gi://GLib';
 import Soup from 'gi://Soup?version=3.0';
 
 Gio._promisify(Soup.Session.prototype, 'send_and_read_async');
+Gio._promisify(Gio.File.prototype, 'load_contents_async');
 
 // shortcut: undocumented endpoints (Claude Code's /usage, Codex's /status); may change without notice.
 const home = GLib.get_home_dir();
 const codexHome = GLib.getenv('CODEX_HOME') ?? GLib.build_filenamev([home, '.codex']);
-const readJson = path => JSON.parse(new TextDecoder().decode(GLib.file_get_contents(path)[1]));
+
+// Async so a slow disk never blocks the shell's main loop.
+export async function readText(path) {
+    const [bytes] = await Gio.File.new_for_path(path).load_contents_async(null);
+    return new TextDecoder().decode(bytes);
+}
+const readJson = async path => JSON.parse(await readText(path));
 
 // Read-only: we never refresh tokens (the CLIs own those files); an expired token just shows an error until the CLI runs again.
 export const PROVIDERS = {
@@ -22,7 +29,7 @@ export const PROVIDERS = {
             return {'Authorization': `Bearer ${token}`, 'anthropic-beta': 'oauth-2025-04-20'};
         },
         limits: u => [u.five_hour, u.seven_day],
-        email: () => readJson(GLib.build_filenamev([home, '.claude.json'])).oauthAccount?.emailAddress,
+        email: async () => (await readJson(GLib.build_filenamev([home, '.claude.json']))).oauthAccount?.emailAddress,
     },
     codex: {
         name: 'ChatGPT', icon: '◎', cli: 'Codex',
@@ -38,8 +45,8 @@ export const PROVIDERS = {
             return h;
         },
         limits: codexLimits,
-        email() {
-            return jwtEmail(readJson(this.creds).tokens?.id_token);
+        async email() {
+            return jwtEmail((await readJson(this.creds)).tokens?.id_token);
         },
     },
 };
@@ -57,9 +64,9 @@ export function jwtEmail(jwt) {
 }
 
 // Username part of the logged-in account's email, or null if unknown.
-export function accountName(provider) {
+export async function accountName(provider) {
     try {
-        return PROVIDERS[provider].email()?.split('@')[0] || null;
+        return (await PROVIDERS[provider].email())?.split('@')[0] || null;
     } catch {
         return null;
     }
@@ -68,7 +75,7 @@ export function accountName(provider) {
 // Returns [session (5h), weekly] limits as {utilization, resets_at}.
 export async function fetchUsage(session, provider, timeoutSeconds = 20) {
     const p = PROVIDERS[provider];
-    const headers = p.headers(readJson(p.creds));
+    const headers = p.headers(await readJson(p.creds));
     const msg = Soup.Message.new('GET', p.url);
     for (const [k, v] of Object.entries(headers))
         msg.request_headers.append(k, v);

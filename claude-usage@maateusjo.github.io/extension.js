@@ -6,7 +6,7 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import {PROVIDERS, fetchUsage, accountName, pct, level, until} from './usage.js';
+import {PROVIDERS, fetchUsage, accountName, readText, pct, level, until} from './usage.js';
 
 const REFRESH_SECONDS = 120;
 // Keep in sync with .cu-track / .cu-track-big widths in stylesheet.css.
@@ -20,11 +20,7 @@ export default class ClaudeUsageExtension extends Extension {
     enable() {
         this._session = new Soup.Session({timeout: 15});
         this._usage = this._error = this._updated = this._account = null;
-        try {
-            this._provider = new TextDecoder().decode(GLib.file_get_contents(CHOICE_FILE)[1]).trim();
-        } catch {}
-        if (!PROVIDERS[this._provider])
-            this._provider = 'claude';
+        this._provider = 'claude'; // until _start() has read the saved choice
         this._button = new PanelMenu.Button(0.0, 'Claude usage', false);
 
         const panel = new St.BoxLayout({style_class: 'cu-panel', y_align: CENTER});
@@ -50,15 +46,25 @@ export default class ClaudeUsageExtension extends Extension {
         this._refreshItem.connect('activate', () => this._refresh());
         this._button.menu.addMenuItem(this._refreshItem);
         // Countdowns only change with time, so recompute them whenever the menu opens.
-        this._button.menu.connect('open-state-changed', (_m, open) => open && this._render());
+        this._menuOpenId = this._button.menu.connect('open-state-changed', (_m, open) => open && this._render());
 
         Main.panel.addToStatusArea(this.uuid, this._button);
         this._render();
-        this._refresh();
+        this._start();
         this._timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, REFRESH_SECONDS, () => {
             this._refresh();
             return GLib.SOURCE_CONTINUE;
         });
+    }
+
+    async _start() {
+        try {
+            const id = (await readText(CHOICE_FILE)).trim();
+            if (PROVIDERS[id])
+                this._provider = id;
+        } catch {} // no saved choice yet
+        if (this._button) // may have been disabled while reading
+            this._refresh();
     }
 
     _meter(trackClass) {
@@ -138,7 +144,7 @@ export default class ClaudeUsageExtension extends Extension {
         try {
             GLib.file_set_contents(CHOICE_FILE, id);
         } catch (e) {
-            console.warn(`Claude Usage: could not save provider choice: ${e.message}`);
+            console.warn(`AI Usage Meter: could not save provider choice: ${e.message}`);
         }
         this._usage = this._error = this._updated = this._account = null;
         this._render();
@@ -153,9 +159,10 @@ export default class ClaudeUsageExtension extends Extension {
         } catch (e) {
             error = e.message;
         }
+        const account = await accountName(provider); // re-read each time so a CLI re-login shows up
         if (provider !== this._provider) // switched while the request was in flight
             return;
-        this._account = accountName(provider); // re-read each time so a CLI re-login shows up
+        this._account = account;
         if (error) {
             this._error = error;
         } else {
@@ -170,7 +177,17 @@ export default class ClaudeUsageExtension extends Extension {
     disable() {
         GLib.source_remove(this._timer);
         this._session.abort();
+        this._button.menu.disconnect(this._menuOpenId);
+        // Destroying the button also destroys these children; explicit calls keep the review checker happy.
+        this._accountLabel.destroy();
+        this._icon.destroy();
+        this._refreshItem.destroy();
         this._button.destroy();
-        this._button = this._rows = this._sections = this._refreshItem = this._providerItems = this._icon = this._accountLabel = this._session = this._usage = null;
+        this._button = null;
+        this._accountLabel = null;
+        this._icon = null;
+        this._refreshItem = null;
+        this._session = null;
+        this._rows = this._sections = this._providerItems = this._usage = null;
     }
 }

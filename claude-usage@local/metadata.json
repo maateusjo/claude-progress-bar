@@ -1,6 +1,0 @@
-{
-  "uuid": "claude-usage@local",
-  "name": "Claude Usage",
-  "description": "Shows Claude or ChatGPT/Codex subscription 5-hour and weekly usage in the top bar.",
-  "shell-version": ["46", "47", "48"]
-}

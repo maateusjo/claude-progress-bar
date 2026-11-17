@@ -1,0 +1,7 @@
+{
+  "uuid": "claude-usage@maateusjo.github.io",
+  "name": "AI Usage Meter for Claude & Codex",
+  "description": "Shows your Claude Code or ChatGPT/Codex subscription usage (5-hour session and weekly limits) as two small bars in the top bar.\n\nPrivacy: the extension reads the login token that the Claude Code CLI (~/.claude/.credentials.json) or Codex CLI (~/.codex/auth.json) already stored, and sends it only to Anthropic (api.anthropic.com) or OpenAI (chatgpt.com) to fetch your usage. It never modifies or copies those files and sends nothing anywhere else.\n\nUnofficial; not affiliated with Anthropic or OpenAI.",
+  "url": "https://github.com/maateusjo/claude-progress-bar",
+  "shell-version": ["46", "47", "48"]
+}
