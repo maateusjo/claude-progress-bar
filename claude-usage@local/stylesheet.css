@@ -1,0 +1,30 @@
+/* Top bar: icon + two stacked mini bars */
+.cu-panel { spacing: 6px; }
+.cu-icon { font-size: 11pt; color: #e8956f; }
+.cu-rows { spacing: 1px; }
+.cu-row { spacing: 4px; }
+.cu-row-value { font-size: 7pt; min-width: 24px; font-feature-settings: "tnum"; }
+.cu-track {
+    width: 48px;
+    height: 3px;
+    border-radius: 2px;
+    background-color: rgba(255,255,255,0.18);
+}
+.cu-fill { height: 3px; border-radius: 2px; transition-duration: 400ms; }
+
+/* Drop-down menu: large bars */
+.cu-section { spacing: 4px; padding: 2px 0; }
+.cu-section-title { font-weight: bold; }
+.cu-section-value { font-feature-settings: "tnum"; }
+.cu-reset { font-size: 9pt; color: rgba(255,255,255,0.6); }
+.cu-track-big {
+    width: 240px;
+    height: 8px;
+    border-radius: 4px;
+    background-color: rgba(255,255,255,0.12);
+}
+.cu-track-big .cu-fill { height: 8px; border-radius: 4px; }
+
+.cu-low  { background-color: #57e389; }
+.cu-mid  { background-color: #f8c251; }
+.cu-high { background-color: #ff6b6b; }

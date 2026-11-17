@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="300" viewBox="0 0 840 300" font-family="Cantarell, Ubuntu, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>Claude Usage indicator in the GNOME top bar with its drop-down menu open</title>
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3a1240"/>
+      <stop offset="0.55" stop-color="#6b2056"/>
+      <stop offset="1" stop-color="#c3533f"/>
+    </linearGradient>
+    <clipPath id="frame"><rect width="840" height="300" rx="16"/></clipPath>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="840" height="300" fill="url(#wall)"/>
+    <circle cx="140" cy="230" r="120" fill="#fff" opacity="0.04"/>
+    <circle cx="260" cy="120" r="60" fill="#fff" opacity="0.05"/>
+
+    <!-- top bar -->
+    <rect width="840" height="34" fill="#111"/>
+    <rect x="16" y="13" width="26" height="8" rx="4" fill="#fff"/>
+    <circle cx="52" cy="17" r="4" fill="#fff" opacity="0.5"/>
+    <circle cx="64" cy="17" r="4" fill="#fff" opacity="0.5"/>
+    <text x="420" y="22" fill="#fff" font-size="13" font-weight="bold" text-anchor="middle">Tue 17 Nov  11:32</text>
+
+    <!-- indicator (highlighted because the menu is open) -->
+    <rect x="590" y="3" width="118" height="28" rx="14" fill="#fff" opacity="0.16"/>
+    <text x="602" y="23" fill="#e8956f" font-size="15">✦</text>
+    <rect x="622" y="11" width="48" height="3" rx="1.5" fill="#fff" opacity="0.18"/>
+    <rect x="622" y="11" width="18" height="3" rx="1.5" fill="#57e389">
+      <animate attributeName="width" from="0" to="18" dur="1.2s" fill="freeze"/>
+    </rect>
+    <text x="676" y="15" fill="#fff" font-size="8">38%</text>
+    <rect x="622" y="21" width="48" height="3" rx="1.5" fill="#fff" opacity="0.18"/>
+    <rect x="622" y="21" width="6" height="3" rx="1.5" fill="#57e389">
+      <animate attributeName="width" from="0" to="6" dur="1.2s" fill="freeze"/>
+    </rect>
+    <text x="676" y="26" fill="#fff" font-size="8">12%</text>
+
+    <!-- system tray -->
+    <path d="M736 21 l6 -8 l6 8 z" fill="#fff"/>
+    <rect x="756" y="12" width="4" height="10" rx="1" fill="#fff"/>
+    <path d="M762 14 q5 3 0 6" stroke="#fff" stroke-width="1.6" fill="none"/>
+    <rect x="780" y="12" width="18" height="10" rx="2" fill="none" stroke="#fff" stroke-width="1.5"/>
+    <rect x="782" y="14" width="11" height="6" rx="1" fill="#fff"/>
+    <circle cx="816" cy="17" r="5" fill="none" stroke="#fff" stroke-width="1.6"/>
+
+    <!-- drop-down menu -->
+    <g filter="url(#shadow)">
+      <rect x="474" y="42" width="350" height="234" rx="14" fill="#2b2b2b" stroke="#3d3d3d"/>
+    </g>
+    <text x="498" y="78" fill="#fff" font-size="14" font-weight="bold">Session (5h)</text>
+    <text x="800" y="78" fill="#fff" font-size="14" text-anchor="end">38%</text>
+    <rect x="498" y="90" width="302" height="8" rx="4" fill="#fff" opacity="0.12"/>
+    <rect x="498" y="90" width="115" height="8" rx="4" fill="#57e389">
+      <animate attributeName="width" from="0" to="115" dur="1.4s" fill="freeze"/>
+    </rect>
+    <text x="498" y="118" fill="#fff" fill-opacity="0.6" font-size="12">resets in 2h 14m</text>
+
+    <text x="498" y="152" fill="#fff" font-size="14" font-weight="bold">Weekly</text>
+    <text x="800" y="152" fill="#fff" font-size="14" text-anchor="end">12%</text>
+    <rect x="498" y="164" width="302" height="8" rx="4" fill="#fff" opacity="0.12"/>
+    <rect x="498" y="164" width="36" height="8" rx="4" fill="#57e389">
+      <animate attributeName="width" from="0" to="36" dur="1.4s" fill="freeze"/>
+    </rect>
+    <text x="498" y="192" fill="#fff" fill-opacity="0.6" font-size="12">resets Fri 19:00</text>
+
+    <line x1="498" y1="214" x2="800" y2="214" stroke="#fff" stroke-opacity="0.12"/>
+    <text x="498" y="248" fill="#fff" font-size="13">⟳ Refresh · updated 11:32</text>
+
+    <!-- callout -->
+    <text x="40" y="120" fill="#fff" font-size="30" font-weight="bold">Know your limits</text>
+    <text x="40" y="152" fill="#fff" fill-opacity="0.85" font-size="30" font-weight="bold">at a glance.</text>
+    <text x="40" y="186" fill="#fff" fill-opacity="0.7" font-size="14">Claude Code session &amp; weekly usage,</text>
+    <text x="40" y="206" fill="#fff" fill-opacity="0.7" font-size="14">right in your Ubuntu top bar.</text>
+  </g>
+</svg>
