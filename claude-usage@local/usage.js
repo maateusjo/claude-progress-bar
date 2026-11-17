@@ -46,14 +46,32 @@ export function codexLimits(u) {
 }
 
 // Returns [session (5h), weekly] limits as {utilization, resets_at}.
-export async function fetchUsage(session, provider) {
+export async function fetchUsage(session, provider, timeoutSeconds = 20) {
     const p = PROVIDERS[provider];
     const [, bytes] = GLib.file_get_contents(p.creds);
     const headers = p.headers(JSON.parse(new TextDecoder().decode(bytes)));
     const msg = Soup.Message.new('GET', p.url);
     for (const [k, v] of Object.entries(headers))
         msg.request_headers.append(k, v);
-    const body = await session.send_and_read_async(msg, GLib.PRIORITY_DEFAULT, null);
+    // Hard deadline: Soup's own timeout doesn't always fire on a stalled HTTP/2 connection, which left "…" forever.
+    const cancellable = new Gio.Cancellable();
+    let timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, timeoutSeconds, () => {
+        timer = 0;
+        cancellable.cancel();
+        return GLib.SOURCE_REMOVE;
+    });
+    let body;
+    try {
+        body = await session.send_and_read_async(msg, GLib.PRIORITY_DEFAULT, cancellable);
+    } catch (e) {
+        if (!cancellable.is_cancelled())
+            throw e;
+        session.abort(); // drop the stuck connection so the next refresh opens a fresh one
+        throw new Error('Request timed out');
+    } finally {
+        if (timer)
+            GLib.source_remove(timer);
+    }
     if (msg.status_code !== 200)
         throw new Error(`HTTP ${msg.status_code}`);
     return p.limits(JSON.parse(new TextDecoder().decode(body.get_data())));

@@ -120,7 +120,8 @@ export default class ClaudeUsageExtension extends Extension {
         });
         if (this._error) {
             this._sections[0].reset.text = `⚠ ${this._error}`;
-            this._sections[1].reset.text = this._error.startsWith('HTTP 401') ? `Token expired? Run ${p.cli} once to refresh it.` : '';
+            this._sections[1].reset.text = this._error.startsWith('HTTP 401') ? `Token expired? Run ${p.cli} once to refresh it.`
+                : this._error.startsWith('HTTP 429') ? 'Rate limited by the server; retrying automatically.' : '';
         }
         const at = this._updated?.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
         this._refreshItem.label.text = at ? `⟳ Refresh · updated ${at}` : '⟳ Refresh';

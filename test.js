@@ -1,5 +1,6 @@
 // Run: gjs -m test.js
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 import System from 'system';
 import Soup from 'gi://Soup?version=3.0';
 import {PROVIDERS, pct, level, until, codexLimits, fetchUsage} from './claude-usage@local/usage.js';
@@ -30,6 +31,16 @@ const live = Object.entries(PROVIDERS).map(([id, p]) => {
         .then(([a, b]) => print(`live ${id}: 5h ${pct(a)}% (${level(pct(a))}), weekly ${pct(b)}%`))
         .catch(e => { print(`live ${id}: fetch failed:`, e.message); failed = true; });
 });
+// A server that accepts but never answers must surface as an error, not hang forever.
+const silent = new Gio.SocketService();
+const port = silent.add_any_inet_port(null);
+silent.connect('incoming', () => true); // accept, never reply
+const fakeCreds = GLib.build_filenamev([GLib.get_tmp_dir(), 'cu-test-creds.json']);
+GLib.file_set_contents(fakeCreds, '{}');
+PROVIDERS.hang = {creds: fakeCreds, url: `http://127.0.0.1:${port}/`, headers: () => ({}), limits: () => []};
+live.push(fetchUsage(new Soup.Session(), 'hang', 1).then(
+    () => { print('hang: resolved?!'); failed = true; },
+    e => { if (e.message !== 'Request timed out') { print('hang:', e.message); failed = true; } }));
 Promise.all(live).finally(() => loop.quit());
 loop.run();
 if (failed)

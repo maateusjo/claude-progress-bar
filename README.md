@@ -9,7 +9,7 @@
 ![No dependencies](https://img.shields.io/badge/dependencies-none-57e389)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
-<img src="docs/hero.svg" alt="The Claude Usage indicator in the GNOME top bar, with the drop-down showing session and weekly usage bars and reset countdowns" width="840">
+<img src="docs/hero.svg" alt="The Claude Usage indicator in the GNOME top bar, with the drop-down showing session and weekly usage bars, reset countdowns and the Claude / ChatGPT (Codex) provider picker" width="840">
 
 </div>
 
@@ -33,7 +33,7 @@ Ever been cut off mid-task by *"You've reached your usage limit"*? This small GN
 | 🪶 **Zero dependencies** | ~250 lines of plain GJS. Nothing to install besides the extension itself. |
 
 <div align="center">
-<img src="docs/states.svg" alt="Bar colors: green under 50%, amber from 50 to 79%, red from 80%" width="840">
+<img src="docs/states.svg" alt="Bar colors: green under 50%, amber from 50 to 79%, red from 80%, shown with the Claude (✦) and ChatGPT/Codex (◎) icons" width="840">
 </div>
 
 ## 🔍 How it works
