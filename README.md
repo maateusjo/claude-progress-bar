@@ -2,7 +2,7 @@
 
 # ✦ Claude Usage for GNOME
 
-**Your Claude Code subscription limits, live in the Ubuntu top bar.**
+**Your Claude Code or ChatGPT/Codex subscription limits, live in the Ubuntu top bar.**
 
 ![GNOME Shell 46–48](https://img.shields.io/badge/GNOME_Shell-46%20%E2%80%93%2048-4a86cf?logo=gnome&logoColor=white)
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04%2B-e95420?logo=ubuntu&logoColor=white)
@@ -24,12 +24,13 @@ Ever been cut off mid-task by *"You've reached your usage limit"*? This small GN
 
 | | |
 |---|---|
+| 🔀 **Claude or ChatGPT** | Pick Claude Code or Codex (ChatGPT plan) from the drop-down. Your choice is remembered. |
 | 📊 **Two stacked mini bars** | Session (5h) on top, weekly below. Compact enough to sit beside the tray icons. |
 | 🎨 **Color-coded** | Green → amber → red as you approach the limit. |
 | 🎞️ **Smooth animation** | Bars glide to their new value and colors cross-fade. |
 | ⏱️ **Reset countdowns** | Click the indicator: *"resets in 2h 14m"* or *"resets Fri 19:00"*. |
 | 🔄 **Auto-refresh** | Updates every 2 minutes, or on demand with **⟳ Refresh**. |
-| 🪶 **Zero dependencies** | ~170 lines of plain GJS. Nothing to install besides the extension itself. |
+| 🪶 **Zero dependencies** | ~250 lines of plain GJS. Nothing to install besides the extension itself. |
 
 <div align="center">
 <img src="docs/states.svg" alt="Bar colors: green under 50%, amber from 50 to 79%, red from 80%" width="840">
@@ -39,31 +40,37 @@ Ever been cut off mid-task by *"You've reached your usage limit"*? This small GN
 
 ```mermaid
 flowchart LR
-    A["🔑 ~/.claude/.credentials.json<br/><sub>written by Claude Code at login</sub>"] -->|read-only| B["✦ Extension"]
-    B -->|"HTTPS, every 2 min"| C["api.anthropic.com<br/>/api/oauth/usage"]
+    A["🔑 ~/.claude/.credentials.json<br/><sub>or ~/.codex/auth.json</sub>"] -->|read-only| B["✦ Extension"]
+    B -->|"HTTPS, every 2 min"| C["api.anthropic.com/api/oauth/usage<br/><sub>or chatgpt.com/backend-api/wham/usage</sub>"]
     C -->|"5h & weekly %"| B
     B --> D["🖥️ GNOME top bar"]
 ```
 
 When you log in to [Claude Code](https://docs.claude.com/en/docs/claude-code/overview), it stores an OAuth token on your machine. The extension reads that token and asks Anthropic's servers for the same usage numbers that Claude Code's `/usage` command shows.
 
+With **ChatGPT** selected it does the same with the token [Codex](https://github.com/openai/codex) saves when you sign in with ChatGPT, showing the limits Codex's `/status` shows.
+
 ### 🔒 Privacy & security
 
-- **You don't enter any credentials.** The extension reuses the login Claude Code already saved.
-- **Your token only goes to `api.anthropic.com`**, the same server Claude Code talks to. No analytics or third-party services.
-- **Read-only.** The extension never writes to, refreshes, or copies your credentials file, so it can't break your Claude Code login.
-- **Nothing is logged or stored.**
+- **You don't enter any credentials.** The extension reuses the login Claude Code or Codex already saved.
+- **Your token only goes to its own provider** (`api.anthropic.com` or `chatgpt.com`), the same server the CLI talks to. Only the selected provider is contacted. No analytics or third-party services.
+- **Read-only.** The extension never writes to, refreshes, or copies your credentials files, so it can't break your CLI login.
+- **Nothing is logged.** The only thing stored is your provider choice, in `~/.config/claude-usage-provider`.
 - **Small and auditable.** All the logic lives in [`usage.js`](claude-usage@local/usage.js) and [`extension.js`](claude-usage@local/extension.js).
 
 > [!WARNING]
-> The usage endpoint is **undocumented** and may change without notice. If that happens the indicator shows ⚠ until the extension is updated. It can't affect your account.
+> The usage endpoints are **undocumented** and may change without notice. If that happens the indicator shows ⚠ until the extension is updated. It can't affect your account.
 
 ## 📦 Requirements
 
 - **GNOME Shell 46, 47 or 48** (Ubuntu 24.04 and later)
-- **[Claude Code](https://docs.claude.com/en/docs/claude-code/overview)** installed and logged in with a **Pro or Max subscription**. API-key users have no subscription limits to show.
+- **[Claude Code](https://docs.claude.com/en/docs/claude-code/overview)** logged in with a **Pro or Max subscription**, and/or **[Codex](https://github.com/openai/codex)** signed in with a **ChatGPT plan**. API-key users have no subscription limits to show.
 
 ## 🚀 Installation
+
+**Quickest:** download `claude-usage@local.zip` from the [latest release](https://github.com/maateusjo/claude-progress-bar/releases/latest), run `gnome-extensions install --force claude-usage@local.zip`, then continue at step 3.
+
+**From source:**
 
 ```bash
 # 1. Get the code
@@ -110,10 +117,11 @@ rm -rf ~/.local/share/gnome-shell/extensions/claude-usage@local
 
 | Symptom | Fix |
 |---|---|
-| **⚠ in the top bar, menu says "Token expired?"** | Claude Code renews its token only while running. Open Claude Code once; the bar recovers on the next refresh. |
-| **⚠ with `HTTP 401` / `403`** | Run `claude` and log in again with `/login`. |
+| **⚠ in the top bar, menu says "Token expired?"** | The CLI renews its token only while running. Open Claude Code (or Codex) once; the bar recovers on the next refresh. |
+| **⚠ with `HTTP 401` / `403`** | Run `claude` and log in again with `/login` (Codex: `codex login`). |
+| **⚠ "Not logged in to Codex with ChatGPT"** | Run `codex login` and sign in with ChatGPT, not an API key. |
 | **⚠ "Not logged in to Claude Code with a subscription"** | You're logged in with an API key, or not at all. Run `claude`, then `/login` with your Pro/Max account. |
-| **⚠ with a file error** | Claude Code isn't logged in on this machine (`~/.claude/.credentials.json` is missing). |
+| **⚠ with a file error** | The selected CLI isn't logged in on this machine (`~/.claude/.credentials.json` or `~/.codex/auth.json` is missing). |
 | **Indicator doesn't appear** | Check `gnome-extensions info claude-usage@local`. It should say `State: ACTIVE`. |
 | **Something else** | Watch the shell log: `journalctl -f -o cat /usr/bin/gnome-shell` |
 
@@ -125,6 +133,7 @@ All sizes and colors live in [`stylesheet.css`](claude-usage@local/stylesheet.cs
 .cu-low  { background-color: #57e389; }   /* under 50% */
 .cu-mid  { background-color: #f8c251; }   /* 50–79%   */
 .cu-high { background-color: #ff6b6b; }   /* 80%+     */
+.cu-icon { font-size: 16pt; }             /* top-bar logo size */
 ```
 
 > [!TIP]
@@ -147,7 +156,7 @@ ln -sfn "$PWD/claude-usage@local" ~/.local/share/gnome-shell/extensions/claude-u
 ### Testing
 
 ```bash
-# Unit checks + one live fetch (needs Claude Code logged in)
+# Unit checks + one live fetch per logged-in CLI
 gjs -m test.js
 
 # Try the extension in a nested GNOME Shell window, without logging out
@@ -174,7 +183,7 @@ test.js              # self-checks, run with gjs
 3. **Put logic in `usage.js`** as pure functions and add a check for it in `test.js`.
 4. **Run `gjs -m test.js`** and try your change in a nested shell before opening a PR.
 5. **Never commit credentials, tokens or real API responses.** Redact anything personal in screenshots and logs.
-6. **Keep the extension read-only** with respect to `~/.claude/`.
+6. **Keep the extension read-only** with respect to `~/.claude/` and `~/.codex/`.
 
 ### Ideas for contributions
 

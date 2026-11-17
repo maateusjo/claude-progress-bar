@@ -6,28 +6,43 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import {fetchUsage, pct, level, until} from './usage.js';
+import {PROVIDERS, fetchUsage, pct, level, until} from './usage.js';
 
 const REFRESH_SECONDS = 120;
 // Keep in sync with .cu-track / .cu-track-big widths in stylesheet.css.
 const PANEL_WIDTH = 48;
 const MENU_WIDTH = 240;
 const CENTER = Clutter.ActorAlign.CENTER;
+// Remembers the chosen provider across restarts; outside ~/.claude so we stay read-only there.
+const CHOICE_FILE = GLib.build_filenamev([GLib.get_user_config_dir(), 'claude-usage-provider']);
 
 export default class ClaudeUsageExtension extends Extension {
     enable() {
         this._session = new Soup.Session({timeout: 15});
         this._usage = this._error = this._updated = null;
+        try {
+            this._provider = new TextDecoder().decode(GLib.file_get_contents(CHOICE_FILE)[1]).trim();
+        } catch {}
+        if (!PROVIDERS[this._provider])
+            this._provider = 'claude';
         this._button = new PanelMenu.Button(0.0, 'Claude usage', false);
 
         const panel = new St.BoxLayout({style_class: 'cu-panel', y_align: CENTER});
-        panel.add_child(new St.Label({text: '✦', style_class: 'cu-icon', y_align: CENTER}));
+        this._icon = new St.Label({style_class: 'cu-icon', y_align: CENTER});
+        panel.add_child(this._icon);
         const rows = new St.BoxLayout({vertical: true, style_class: 'cu-rows', y_align: CENTER});
         this._rows = [this._panelRow(rows), this._panelRow(rows)];
         panel.add_child(rows);
         this._button.add_child(panel);
 
         this._sections = [this._section('Session (5h)'), this._section('Weekly')];
+        this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this._providerItems = Object.entries(PROVIDERS).map(([id, p]) => {
+            const item = new PopupMenu.PopupMenuItem(`${p.icon}  ${p.name} (${p.cli})`);
+            item.connect('activate', () => this._select(id));
+            this._button.menu.addMenuItem(item);
+            return [id, item];
+        });
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._refreshItem = new PopupMenu.PopupMenuItem('⟳ Refresh');
         this._refreshItem.connect('activate', () => this._refresh());
@@ -36,6 +51,7 @@ export default class ClaudeUsageExtension extends Extension {
         this._button.menu.connect('open-state-changed', (_m, open) => open && this._render());
 
         Main.panel.addToStatusArea(this.uuid, this._button);
+        this._render();
         this._refresh();
         this._timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, REFRESH_SECONDS, () => {
             this._refresh();
@@ -86,31 +102,60 @@ export default class ClaudeUsageExtension extends Extension {
     }
 
     _render() {
-        const limits = [this._usage?.five_hour, this._usage?.seven_day];
+        const p = PROVIDERS[this._provider];
+        this._icon.text = p.icon;
+        this._icon.style_class = `cu-icon cu-icon-${this._provider}`;
+        for (const [id, item] of this._providerItems)
+            item.setOrnament(id === this._provider ? PopupMenu.Ornament.DOT : PopupMenu.Ornament.NONE);
+        // Placeholders until the selected provider's first fetch, so a switch never shows stale numbers.
+        const limits = this._usage ?? [null, null];
         limits.forEach((limit, i) => {
             const p = pct(limit);
             const row = this._rows[i], sec = this._sections[i];
             this._setFill(row.fill, PANEL_WIDTH, p);
             this._setFill(sec.fill, MENU_WIDTH, p);
-            row.value.text = this._error ? '⚠' : `${p}%`;
-            sec.value.text = `${p}%`;
-            sec.reset.text = `resets ${until(limit?.resets_at)}`;
+            row.value.text = this._error ? '⚠' : limit ? `${p}%` : '…';
+            sec.value.text = limit ? `${p}%` : '…';
+            sec.reset.text = limit ? `resets ${until(limit.resets_at)}` : '';
         });
         if (this._error) {
             this._sections[0].reset.text = `⚠ ${this._error}`;
-            this._sections[1].reset.text = this._error.startsWith('HTTP 401') ? 'Token expired? Run Claude Code once to refresh it.' : '';
+            this._sections[1].reset.text = this._error.startsWith('HTTP 401') ? `Token expired? Run ${p.cli} once to refresh it.` : '';
         }
         const at = this._updated?.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
         this._refreshItem.label.text = at ? `⟳ Refresh · updated ${at}` : '⟳ Refresh';
     }
 
-    async _refresh() {
+    _select(id) {
+        if (id === this._provider)
+            return;
+        this._provider = id;
         try {
-            this._usage = await fetchUsage(this._session);
+            GLib.file_set_contents(CHOICE_FILE, id);
+        } catch (e) {
+            console.warn(`Claude Usage: could not save provider choice: ${e.message}`);
+        }
+        this._usage = this._error = this._updated = null;
+        this._render();
+        this._refresh();
+    }
+
+    async _refresh() {
+        const provider = this._provider;
+        let usage, error = null;
+        try {
+            usage = await fetchUsage(this._session, provider);
+        } catch (e) {
+            error = e.message;
+        }
+        if (provider !== this._provider) // switched while the request was in flight
+            return;
+        if (error) {
+            this._error = error;
+        } else {
+            this._usage = usage;
             this._updated = new Date();
             this._error = null;
-        } catch (e) {
-            this._error = e.message;
         }
         if (this._button) // may have been disabled while the request was in flight
             this._render();
@@ -120,6 +165,6 @@ export default class ClaudeUsageExtension extends Extension {
         GLib.source_remove(this._timer);
         this._session.abort();
         this._button.destroy();
-        this._button = this._rows = this._sections = this._refreshItem = this._session = this._usage = null;
+        this._button = this._rows = this._sections = this._refreshItem = this._providerItems = this._icon = this._session = this._usage = null;
     }
 }

@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A dependency-free GNOME Shell extension (GJS, ES modules, GNOME 46–48) that shows Claude Code subscription usage (5-hour session + weekly) as two mini progress bars in the top bar. No build step, no package manager.
+A dependency-free GNOME Shell extension (GJS, ES modules, GNOME 46–48) that shows Claude Code or ChatGPT/Codex subscription usage (5-hour session + weekly) as two mini progress bars in the top bar. No build step, no package manager.
 
 ## Commands
 
 ```bash
-gjs -m test.js    # assert-based unit checks + one live fetch (live part skipped if ~/.claude/.credentials.json is missing)
+gjs -m test.js    # assert-based unit checks + one live fetch per provider whose credentials file exists
 
 # Dev install: symlink so edits are picked up on shell restart
 ln -sfn "$PWD/claude-usage@local" ~/.local/share/gnome-shell/extensions/claude-usage@local
@@ -26,9 +26,10 @@ There is no test runner or single-test selection: `test.js` is a flat list of `a
 
 ## Architecture
 
-- `claude-usage@local/usage.js` — the only file importable outside GNOME Shell (no `resource:///org/gnome/shell/...` imports). Holds `fetchUsage` (reads the OAuth token from `~/.claude/.credentials.json`, GETs the undocumented `https://api.anthropic.com/api/oauth/usage` with `anthropic-beta: oauth-2025-04-20`) and pure helpers `pct`, `level`, `until`. Put new logic here as pure functions so `test.js` can cover it.
-- `claude-usage@local/extension.js` — UI only: `PanelMenu.Button` with two panel rows, two menu sections, a refresh item, and a `REFRESH_SECONDS` timer. `_refresh()` fetches into state; `_render()` paints from state (also re-run on menu open so countdowns stay current). `disable()` must tear down everything `enable()` creates (timer, Soup session, button).
-- Response fields used: `five_hour` / `seven_day`, each with `utilization` (0–100) and `resets_at` (ISO).
+- `claude-usage@local/usage.js` — the only file importable outside GNOME Shell (no `resource:///org/gnome/shell/...` imports). Holds the `PROVIDERS` table (`claude`: token from `~/.claude/.credentials.json` → `api.anthropic.com/api/oauth/usage`; `codex`: token + account id from `$CODEX_HOME/auth.json` → `chatgpt.com/backend-api/wham/usage`, both undocumented), `fetchUsage(session, provider)` which returns `[session5h, weekly]` as `{utilization, resets_at}`, and pure helpers `pct`, `level`, `until`, `codexLimits`. A new provider is one entry in `PROVIDERS` whose `limits()` normalizes to that shape. Put new logic here as pure functions so `test.js` can cover it.
+- `claude-usage@local/extension.js` — UI only: `PanelMenu.Button` with two panel rows, two menu sections, provider radio items (choice saved in `~/.config/claude-usage-provider`), a refresh item, and a `REFRESH_SECONDS` timer. `_refresh()` fetches into state; `_render()` paints from state (also re-run on menu open so countdowns stay current). `disable()` must tear down everything `enable()` creates (timer, Soup session, button).
+- Claude response: `five_hour` / `seven_day` with `utilization` (0–100) and `resets_at` (ISO). Codex response: `rate_limit.primary_window` / `secondary_window` with `used_percent` and `reset_at` (Unix seconds).
+- `_refresh()` drops results if the provider was switched while the request was in flight.
 
 ## Coupled values (keep in sync)
 
@@ -38,6 +39,6 @@ There is no test runner or single-test selection: `test.js` is a flat list of `a
 ## Rules
 
 - Keep it dependency-free: GJS and GNOME platform libraries only.
-- The extension must stay read-only with respect to `~/.claude/` — never write, refresh or copy the credentials file (Claude Code owns token refresh; an expired token surfaces as `HTTP 401` in the menu).
+- The extension must stay read-only with respect to `~/.claude/` and `~/.codex/` — never write, refresh or copy credentials files (the CLIs own token refresh; an expired token surfaces as `HTTP 401` in the menu).
 - Never commit tokens or real API responses.
 - Supported shell versions are declared in `metadata.json`.

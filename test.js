@@ -2,7 +2,7 @@
 import GLib from 'gi://GLib';
 import System from 'system';
 import Soup from 'gi://Soup?version=3.0';
-import {pct, level, until, fetchUsage} from './claude-usage@local/usage.js';
+import {PROVIDERS, pct, level, until, codexLimits, fetchUsage} from './claude-usage@local/usage.js';
 
 const assert = (c, m) => { if (!c) throw new Error(m); };
 assert(pct({utilization: 37.6}) === 38, 'pct rounds');
@@ -15,15 +15,23 @@ assert(until('2026-11-17T09:00:00Z', now) === 'now', 'until past');
 assert(until(null, now) === '—', 'until missing');
 assert(!until('2026-11-20T10:00:00Z', now).startsWith('in '), 'until far uses weekday');
 assert(level(49) === 'low' && level(50) === 'mid' && level(80) === 'high', 'level thresholds');
+const [s, w] = codexLimits({rate_limit: {primary_window: {used_percent: 42, reset_at: now / 1000 + 3600}, secondary_window: null}});
+assert(pct(s) === 42 && until(s.resets_at, now) === 'in 1h 0m', 'codex primary window');
+assert(w == null && pct(w) === 0, 'codex missing window');
+assert(codexLimits({}).every(l => l == null), 'codex missing rate_limit');
 
-if (GLib.file_test(GLib.build_filenamev([GLib.get_home_dir(), '.claude', '.credentials.json']), GLib.FileTest.EXISTS)) {
-    const loop = new GLib.MainLoop(null, false);
-    fetchUsage(new Soup.Session({timeout: 15}))
-        .then(u => print(`live: 5h ${pct(u.five_hour)}% (${level(pct(u.five_hour))}), 7d ${pct(u.seven_day)}%`))
-        .catch(e => { print('fetch failed:', e.message); System.exit(1); })
-        .finally(() => loop.quit());
-    loop.run();
-} else {
-    print('live: skipped (Claude Code not logged in)');
-}
+// One live fetch per provider whose CLI is logged in on this machine.
+const loop = new GLib.MainLoop(null, false);
+let failed = false;
+const live = Object.entries(PROVIDERS).map(([id, p]) => {
+    if (!GLib.file_test(p.creds, GLib.FileTest.EXISTS))
+        return print(`live ${id}: skipped (${p.cli} not logged in)`);
+    return fetchUsage(new Soup.Session({timeout: 15}), id)
+        .then(([a, b]) => print(`live ${id}: 5h ${pct(a)}% (${level(pct(a))}), weekly ${pct(b)}%`))
+        .catch(e => { print(`live ${id}: fetch failed:`, e.message); failed = true; });
+});
+Promise.all(live).finally(() => loop.quit());
+loop.run();
+if (failed)
+    System.exit(1);
 print('ok');

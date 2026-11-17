@@ -4,23 +4,59 @@ import Soup from 'gi://Soup?version=3.0';
 
 Gio._promisify(Soup.Session.prototype, 'send_and_read_async');
 
-// shortcut: undocumented endpoint used by Claude Code's /usage; may change without notice.
-const URL = 'https://api.anthropic.com/api/oauth/usage';
-const CREDS = GLib.build_filenamev([GLib.get_home_dir(), '.claude', '.credentials.json']);
+// shortcut: undocumented endpoints (Claude Code's /usage, Codex's /status); may change without notice.
+const home = GLib.get_home_dir();
+const codexHome = GLib.getenv('CODEX_HOME') ?? GLib.build_filenamev([home, '.codex']);
 
-// Read-only: we never refresh the token (Claude Code owns that file); an expired token just shows an error until Claude Code runs again.
-export async function fetchUsage(session) {
-    const [, bytes] = GLib.file_get_contents(CREDS);
-    const token = JSON.parse(new TextDecoder().decode(bytes)).claudeAiOauth?.accessToken;
-    if (!token)
-        throw new Error('Not logged in to Claude Code with a subscription');
-    const msg = Soup.Message.new('GET', URL);
-    msg.request_headers.append('Authorization', `Bearer ${token}`);
-    msg.request_headers.append('anthropic-beta', 'oauth-2025-04-20');
+// Read-only: we never refresh tokens (the CLIs own those files); an expired token just shows an error until the CLI runs again.
+export const PROVIDERS = {
+    claude: {
+        name: 'Claude', icon: '✦', cli: 'Claude Code',
+        creds: GLib.build_filenamev([home, '.claude', '.credentials.json']),
+        url: 'https://api.anthropic.com/api/oauth/usage',
+        headers: c => {
+            const token = c.claudeAiOauth?.accessToken;
+            if (!token)
+                throw new Error('Not logged in to Claude Code with a subscription');
+            return {'Authorization': `Bearer ${token}`, 'anthropic-beta': 'oauth-2025-04-20'};
+        },
+        limits: u => [u.five_hour, u.seven_day],
+    },
+    codex: {
+        name: 'ChatGPT', icon: '◎', cli: 'Codex',
+        creds: GLib.build_filenamev([codexHome, 'auth.json']),
+        url: 'https://chatgpt.com/backend-api/wham/usage',
+        headers: c => {
+            const t = c.tokens;
+            if (!t?.access_token)
+                throw new Error('Not logged in to Codex with ChatGPT');
+            const h = {'Authorization': `Bearer ${t.access_token}`, 'User-Agent': 'codex-cli'};
+            if (t.account_id)
+                h['chatgpt-account-id'] = t.account_id;
+            return h;
+        },
+        limits: codexLimits,
+    },
+};
+
+// Codex: primary window is the 5h limit, secondary the weekly one; reset_at is Unix seconds.
+export function codexLimits(u) {
+    const win = w => w && {utilization: w.used_percent, resets_at: new Date(w.reset_at * 1000).toISOString()};
+    return [win(u.rate_limit?.primary_window), win(u.rate_limit?.secondary_window)];
+}
+
+// Returns [session (5h), weekly] limits as {utilization, resets_at}.
+export async function fetchUsage(session, provider) {
+    const p = PROVIDERS[provider];
+    const [, bytes] = GLib.file_get_contents(p.creds);
+    const headers = p.headers(JSON.parse(new TextDecoder().decode(bytes)));
+    const msg = Soup.Message.new('GET', p.url);
+    for (const [k, v] of Object.entries(headers))
+        msg.request_headers.append(k, v);
     const body = await session.send_and_read_async(msg, GLib.PRIORITY_DEFAULT, null);
     if (msg.status_code !== 200)
         throw new Error(`HTTP ${msg.status_code}`);
-    return JSON.parse(new TextDecoder().decode(body.get_data()));
+    return p.limits(JSON.parse(new TextDecoder().decode(body.get_data())));
 }
 
 export function pct(limit) {
